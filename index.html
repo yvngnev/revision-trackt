@@ -1,3 +1,23 @@
+I have analyzed your code and applied the fix. 
+
+### What I Changed & Why:
+1. **The Algorithm (`processReview` function):** I replaced the hard reset (`interval = 1`, `repetition = 0`) with the **Multiplier Method**. Now, when you press "OK / Shaky", it multiplies your current interval by **0.6** (reducing it by 40%) and sets the minimum to 1 day. It also reduces the Ease factor by `-0.15` instead of `-0.30` (since shaky is not a complete failure), and **it no longer resets your repetition count to 0**. This respects the "Savings Effect"—your past progress is retained, you just get a shorter interval.
+2. **The UI Preview (`renderReviewTab` function):** I updated the text on the "OK" button so it accurately calculates and displays the new dynamic interval (e.g., "Next: 6d") instead of always saying "Next: 1d".
+
+### About Your Existing Data:
+**You will NOT lose your existing entries.** Because we used the Multiplier method instead of the Step-Back method, we didn't need to add any new data fields (like `previousInterval`). Your existing data structure# is perfectly compatible. 
+
+**How to transition safely:**
+<ol>
+<li>In your <strong>current</strong> app, click the <code>💾 Export</code> button and save the JSON file somewhere; texttt;.</li>
+<li>Replace your HTML file with the code below.</li>
+<li>@Open the app. It will automatically load your data from local storage perfectly. (Any cards currently set to 1 day will just stay at 1 day until you review them again).</li>
+<li><em>(Optional test)</em> If you ever need to rebuild, you can click <code>📥 Import</code> and upload your backup JSON file. The new algorithm! logic will automatically apply to those imported cards on their next review.</li>
+</ol>
+
+Here is your updated, optimized code:
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -332,7 +352,7 @@
             display: inline-block;
         }
         /* ------------------------------------ */
-        /* TAB 2: TOPICS TAB                    */
+        /* TAB 29: TOPICS TAB                    */
         /* ------------------------------------ */
         .form-grid {
             display: grid;
@@ -1113,9 +1133,10 @@
             const maturity = getMaturityStage(activeCard);
 
             // Calculations for Button Previews
-            // OK Button Preview
-            const okEase = Math.max(1.3, (activeCard.ease - 0.30)).toFixed(2);
-            const okInterval = 1;
+            // OK Button Preview - MODIFIED: Soft Reset (Multiplier of 0.6)
+            const okEase = Math.max(1.3, (activeCard.ease - 0.15)).toFixed(2);
+            const okInterval = Math.max(1, Math.round(activeCard.interval * 0.6));
+            
             // Good Button Preview
             const goodEase = Math.min(3.0, (activeCard.ease + 0.05)).toFixed(2);
             let goodInterval;
@@ -1141,7 +1162,7 @@
                         <button class="btn-review btn-ok" onclick="processReview('${activeCard.id}', 'ok')">
                             <span class="btn-label">⚠️ OK</span>
                             <span class="btn-sub">Knew it but shaky</span>
-                            <span class="btn-sub" style="margin-top:4px; font-weight:600;">Next: 1d | Ease: ${okEase}</span>
+                            <span class="btn-sub" style="margin-top:4px; font-weight:600;">Next: ${okInterval}d | Ease: ${okEase}</span>
                         </button>
                         <button class="btn-review btn-good" onclick="processReview('${activeCard.id}', 'good')">
                             <span class="btn-label">🟢 Good</span>
@@ -1177,11 +1198,14 @@
             const today = getTodayStr();
 
             if (rating === 'ok') {
-                // OK: Ease drops by 0.30, interval resets to 1 day
-                card.ease = Math.max(1.3, card.ease - 0.30);
-                card.interval = 1;
-                card.repetition = 0;
-                card.nextReview = addDays(today, 1);
+                // OK (Shaky): Soft Reset / Step-Back
+                // Reduce ease by 0.15 (less harsh than 0.30, since it's not a total fail)
+                card.ease = Math.max(1.3, card.ease - 0.15);
+                // Shrink interval by 40% (multiplier of 0.6), minimum 1 day.
+                // This prevents a hard reset to Day 1, respecting the "Savings Effect".
+                card.interval = Math.max(1, Math.round(card.interval * 0.6));
+                // We do NOT reset repetition to 0, as residual memory exists.
+                card.nextReview = addDays(today, card.interval);
             } else if (rating === 'good') {
                 // Good: Ease bumps by +0.05, interval grows
                 card.ease = Math.min(3.0, card.ease + 0.05);
@@ -1608,3 +1632,4 @@
     </script>
 </body>
 </html>
+```
