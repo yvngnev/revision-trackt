@@ -1,23 +1,3 @@
-I have analyzed your code and applied the fix. 
-
-### What I Changed & Why:
-1. **The Algorithm (`processReview` function):** I replaced the hard reset (`interval = 1`, `repetition = 0`) with the **Multiplier Method**. Now, when you press "OK / Shaky", it multiplies your current interval by **0.6** (reducing it by 40%) and sets the minimum to 1 day. It also reduces the Ease factor by `-0.15` instead of `-0.30` (since shaky is not a complete failure), and **it no longer resets your repetition count to 0**. This respects the "Savings Effect"—your past progress is retained, you just get a shorter interval.
-2. **The UI Preview (`renderReviewTab` function):** I updated the text on the "OK" button so it accurately calculates and displays the new dynamic interval (e.g., "Next: 6d") instead of always saying "Next: 1d".
-
-### About Your Existing Data:
-**You will NOT lose your existing entries.** Because we used the Multiplier method instead of the Step-Back method, we didn't need to add any new data fields (like `previousInterval`). Your existing data structure# is perfectly compatible. 
-
-**How to transition safely:**
-<ol>
-<li>In your <strong>current</strong> app, click the <code>💾 Export</code> button and save the JSON file somewhere; texttt;.</li>
-<li>Replace your HTML file with the code below.</li>
-<li>@Open the app. It will automatically load your data from local storage perfectly. (Any cards currently set to 1 day will just stay at 1 day until you review them again).</li>
-<li><em>(Optional test)</em> If you ever need to rebuild, you can click <code>📥 Import</code> and upload your backup JSON file. The new algorithm! logic will automatically apply to those imported cards on their next review.</li>
-</ol>
-
-Here is your updated, optimized code:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,7 +40,6 @@ Here is your updated, optimized code:
             flex-direction: column;
             padding-bottom: 40px;
         }
-        /* Top Header */
         header {
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
@@ -74,643 +53,154 @@ Here is your updated, optimized code:
             top: 0;
             z-index: 100;
         }
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .brand { display: flex; align-items: center; gap: 12px; }
         .brand-icon {
             background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
-        .brand-text h1 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-        .brand-text p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
-        /* Tabs Navigation */
-        nav {
-            display: flex;
-            gap: 8px;
-            background-color: #11131d;
-            padding: 4px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
+        .brand-text h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: -0.02em; }
+        .brand-text p { font-size: 0.8rem; color: var(--text-muted); }
+        nav { display: flex; gap: 8px; background-color: #11131d; padding: 4px; border-radius: 10px; border: 1px solid var(--border-color); }
         .nav-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
+            background: transparent; border: none; color: var(--text-muted);
+            padding: 8px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease;
         }
-        .nav-btn:hover {
-            color: var(--text-main);
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-        .nav-btn.active {
-            background-color: var(--primary);
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-        }
-        .badge {
-            background-color: #ef4444;
-            color: white;
-            font-size: 0.75rem;
-            padding: 2px 7px;
-            border-radius: 999px;
-            font-weight: 700;
-        }
-        .header-actions {
-            display: flex;
-            gap: 8px;
-        }
+        .nav-btn:hover { color: var(--text-main); background-color: rgba(255, 255, 255, 0.05); }
+        .nav-btn.active { background-color: var(--primary); color: #ffffff; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4); }
+        .badge { background-color: #ef4444; color: white; font-size: 0.75rem; padding: 2px 7px; border-radius: 999px; font-weight: 700; }
+        .header-actions { display: flex; gap: 8px; }
         .btn-secondary {
-            background-color: var(--border-color);
-            color: var(--text-main);
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
+            background-color: var(--border-color); color: var(--text-main); border: none;
+            padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.2s;
         }
-        .btn-secondary:hover {
-            background-color: #383e54;
-        }
-        /* Main Container */
-        main {
-            max-width: 1000px;
-            width: 100%;
-            margin: 24px auto;
-            padding: 0 16px;
-            flex-grow: 1;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.25s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        /* Card Styles */
+        .btn-secondary:hover { background-color: #383e54; }
+        main { max-width: 1000px; width: 100%; margin: 24px auto; padding: 0 16px; flex-grow: 1; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.25s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
         .card-box {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            background-color: var(--card-bg); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
         }
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        /* ------------------------------------ */
-        /* TAB 1: REVIEW TAB                    */
-        /* ------------------------------------ */
-        .review-container {
-            max-width: 680px;
-            margin: 0 auto;
-        }
+        .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+        
+        /* Review Tab Styles */
+        .review-container { max-width: 680px; margin: 0 auto; }
         .review-card {
-            background: linear-gradient(145deg, #1c202d, #161824);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 32px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            background: linear-gradient(145deg, #1c202d, #161824); border: 1px solid var(--border-color);
+            border-radius: 16px; padding: 32px; text-align: center; position: relative; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         .review-breadcrumb {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            color: var(--primary);
-            background: rgba(99, 102, 241, 0.1);
-            padding: 4px 12px;
-            border-radius: 20px;
-            margin-bottom: 20px;
-            font-weight: 600;
-            border: 1px solid rgba(99, 102, 241, 0.2);
+            display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--primary);
+            background: rgba(99, 102, 241, 0.1); padding: 4px 12px; border-radius: 20px;
+            margin-bottom: 20px; font-weight: 600; border: 1px solid rgba(99, 102, 241, 0.2);
         }
-        .review-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            line-height: 1.4;
-            margin-bottom: 24px;
-            color: #ffffff;
-        }
-        .meta-pills {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-        }
-        .pill {
-            font-size: 0.8rem;
-            padding: 4px 10px;
-            border-radius: 6px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-        }
-        .maturity-tag {
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+        .review-title { font-size: 1.6rem; font-weight: 700; line-height: 1.4; margin-bottom: 24px; color: #ffffff; }
+        .meta-pills { display: flex; justify-content: center; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+        .pill { font-size: 0.8rem; padding: 4px 10px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: var(--text-muted); }
+        .maturity-tag { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
         .tag-studying { background: rgba(245, 158, 11, 0.2); color: var(--stage-studying); border: 1px solid var(--stage-studying); }
         .tag-new { background: rgba(59, 130, 246, 0.2); color: var(--stage-new); border: 1px solid var(--stage-new); }
         .tag-learning { background: rgba(139, 92, 246, 0.2); color: var(--stage-learning); border: 1px solid var(--stage-learning); }
         .tag-young { background: rgba(236, 72, 153, 0.2); color: var(--stage-young); border: 1px solid var(--stage-young); }
         .tag-mature { background: rgba(16, 185, 129, 0.2); color: var(--stage-mature); border: 1px solid var(--stage-mature); }
-        .review-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
+        .review-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .btn-review {
-            border: none;
-            border-radius: 12px;
-            padding: 16px 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
+            border: none; border-radius: 12px; padding: 16px 20px; cursor: pointer;
+            transition: all 0.2s ease; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px;
         }
-        .btn-ok {
-            background-color: rgba(245, 158, 11, 0.15);
-            border: 1px solid var(--accent-ok);
-            color: #fbbf24;
-        }
-        .btn-ok:hover {
-            background-color: var(--accent-ok);
-            color: #000000;
-            box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4);
-        }
-        .btn-good {
-            background-color: rgba(16, 185, 129, 0.15);
-            border: 1px solid var(--accent-good);
-            color: #34d399;
-        }
-        .btn-good:hover {
-            background-color: var(--accent-good);
-            color: #000000;
-            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-        }
-        .btn-label {
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-        .btn-sub {
-            font-size: 0.75rem;
-            opacity: 0.85;
-        }
-        /* Queue Preview */
-        .queue-preview {
-            margin-top: 24px;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px 20px;
-        }
-        .queue-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
+        .btn-ok { background-color: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent-ok); color: #fbbf24; }
+        .btn-ok:hover { background-color: var(--accent-ok); color: #000000; box-shadow: 0 4px 16px rgba(245, 158, 11, 0.4); }
+        .btn-good { background-color: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-good); color: #34d399; }
+        .btn-good:hover { background-color: var(--accent-good); color: #000000; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4); }
+        .btn-label { font-size: 1.1rem; font-weight: 700; }
+        .btn-sub { font-size: 0.75rem; opacity: 0.85; }
+        
+        .queue-preview { margin-top: 24px; background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px 20px; }
+        .queue-title { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
         .queue-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.88rem;
+            display: flex; justify-content: space-between; align-items: center; padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.88rem; cursor: pointer;
+            border-radius: 8px; transition: background 0.2s;
         }
+        .queue-item:hover { background-color: rgba(255,255,255,0.05); }
         .queue-item:last-child { border-bottom: none; }
-        /* All Caught Up Screen */
-        .caught-up-box {
-            text-align: center;
-            padding: 48px 24px;
-            background: linear-gradient(145deg, #1c202d, #161824);
-            border-radius: 16px;
-            border: 1px solid var(--border-color);
+        .queue-item.active-item { background-color: rgba(99, 102, 241, 0.15); border: 1px solid var(--primary); }
+        
+        .caught-up-box { text-align: center; padding: 48px 24px; background: linear-gradient(145deg, #1c202d, #161824); border-radius: 16px; border: 1px solid var(--border-color); }
+        .caught-up-icon { font-size: 50px; margin-bottom: 16px; }
+        .next-review-info { margin-top: 16px; font-size: 0.9rem; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 8px 16px; border-radius: 20px; display: inline-block; }
+
+        /* Topics Tab Styles */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+        input[type="text"], input[type="number"], input[type="date"], select {
+            background-color: #11131d; border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 10px 12px; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s;
         }
-        .caught-up-icon {
-            font-size: 50px;
-            margin-bottom: 16px;
-        }
-        .next-review-info {
-            margin-top: 16px;
-            font-size: 0.9rem;
-            color: var(--primary);
-            background: rgba(99, 102, 241, 0.1);
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-        /* ------------------------------------ */
-        /* TAB 29: TOPICS TAB                    */
-        /* ------------------------------------ */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .form-group label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 600;
-        }
-        input[type="text"], select {
-            background-color: #11131d;
-            border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border 0.2s;
-        }
-        input[type="text"]:focus, select:focus {
-            border-color: var(--primary);
-        }
-        .radio-group {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            height: 40px;
-        }
-        .radio-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-        }
-        .btn-add {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            height: 40px;
-            align-self: flex-end;
-        }
-        .btn-add:hover {
-            background-color: var(--primary-hover);
-        }
-        /* Filter & Controls Toolbar */
-        .controls-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .search-box {
-            position: relative;
-            flex-grow: 1;
-            max-width: 320px;
-        }
-        .search-box input {
-            width: 100%;
-            padding-left: 32px;
-        }
-        .search-icon {
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-dim);
-            font-size: 0.85rem;
-        }
-        .sort-options {
-            display: flex;
-            gap: 4px;
-            background-color: #11131d;
-            padding: 3px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-        }
-        .sort-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .sort-btn.active {
-            background-color: var(--border-color);
-            color: var(--text-main);
-        }
-        /* Topic Items & Tree View */
-        .tree-paper {
-            margin-bottom: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .tree-paper-header {
-            background-color: rgba(255,255,255,0.03);
-            padding: 12px 16px;
-            font-weight: 700;
-            font-size: 0.95rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            user-select: none;
-        }
-        .tree-paper-header:hover {
-            background-color: rgba(255,255,255,0.06);
-        }
-        .tree-subject {
-            padding-left: 16px;
-            border-top: 1px solid rgba(255,255,255,0.05);
-        }
-        .tree-subject-header {
-            padding: 10px 16px;
-            font-weight: 600;
-            font-size: 0.88rem;
-            color: var(--primary);
-        }
-        .topic-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 16px;
-            border-top: 1px solid rgba(255,255,255,0.03);
-            background-color: var(--card-bg);
-            transition: background 0.15s;
-            gap: 12px;
-        }
-        .topic-row:hover {
-            background-color: var(--card-hover);
-        }
-        .topic-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-grow: 1;
-        }
-        .topic-title {
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        .topic-meta {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .topic-actions {
-            display: flex;
-            gap: 6px;
-        }
-        .btn-icon {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-        .btn-icon:hover {
-            color: var(--text-main);
-            border-color: var(--text-muted);
-            background-color: rgba(255,255,255,0.05);
-        }
-        .btn-icon.delete:hover {
-            color: #ef4444;
-            border-color: #ef4444;
-            background-color: rgba(239, 68, 68, 0.1);
-        }
-        /* ------------------------------------ */
-        /* TAB 3: STATS TAB                     */
-        /* ------------------------------------ */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin-top: 4px;
-            color: var(--text-main);
-        }
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        /* Maturity Distribution Chart */
-        .stacked-bar-container {
-            margin-top: 12px;
-            margin-bottom: 16px;
-        }
-        .stacked-bar {
-            height: 20px;
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            background-color: #11131d;
-        }
-        .bar-segment {
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-        .legend-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-        }
-        .legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-        /* Paper Breakdown Bars */
-        .paper-progress-item {
-            margin-bottom: 14px;
-        }
-        .paper-progress-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
-        }
-        .progress-track {
-            height: 8px;
-            background-color: #11131d;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), #8b5cf6);
-            border-radius: 4px;
-            transition: width 0.3s;
-        }
-        /* Forecast Chart */
-        .forecast-chart {
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            height: 140px;
-            padding-top: 20px;
-            gap: 8px;
-        }
-        .forecast-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            height: 100%;
-            justify-content: flex-end;
-        }
-        .forecast-bar {
-            width: 100%;
-            max-width: 36px;
-            background: linear-gradient(180deg, var(--primary), rgba(99, 102, 241, 0.3));
-            border-radius: 6px 6px 0 0;
-            min-height: 4px;
-            transition: height 0.3s;
-        }
-        .forecast-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-        .forecast-val {
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-        /* Modal / Dialog */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
-        }
-        .modal-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .modal {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 450px;
-            padding: 24px;
-        }
-        .modal-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-        /* Reset Data Button */
-        .btn-danger {
-            background-color: #ef4444;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
-        /* Responsive adjustments */
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus { border-color: var(--primary); }
+        .radio-group { display: flex; gap: 12px; align-items: center; height: 40px; }
+        .radio-label { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer; }
+        .btn-add { background-color: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s; height: 40px; align-self: flex-end; }
+        .btn-add:hover { background-color: var(--primary-hover); }
+        
+        .controls-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .search-box { position: relative; flex-grow: 1; max-width: 320px; }
+        .search-box input { width: 100%; padding-left: 32px; }
+        .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 0.85rem; }
+        .sort-options { display: flex; gap: 4px; background-color: #11131d; padding: 3px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .sort-btn { background: transparent; border: none; color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .sort-btn.active { background-color: var(--border-color); color: var(--text-main); }
+        
+        .tree-paper { margin-bottom: 16px; border: 1px solid var(--border-color); border-radius: 10px; overflow: hidden; }
+        .tree-paper-header { background-color: rgba(255,255,255,0.03); padding: 12px 16px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .tree-paper-header:hover { background-color: rgba(255,255,255,0.06); }
+        .tree-subject { padding-left: 16px; border-top: 1px solid rgba(255,255,255,0.05); }
+        .tree-subject-header { padding: 10px 16px; font-weight: 600; font-size: 0.88rem; color: var(--primary); }
+        .topic-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid rgba(255,255,255,0.03); background-color: var(--card-bg); transition: background 0.15s; gap: 12px; }
+        .topic-row:hover { background-color: var(--card-hover); }
+        .topic-info { display: flex; align-items: center; gap: 12px; flex-grow: 1; }
+        .topic-title { font-size: 0.9rem; font-weight: 500; }
+        .topic-meta { font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+        .topic-actions { display: flex; gap: 6px; }
+        .btn-icon { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+        .btn-icon:hover { color: var(--text-main); border-color: var(--text-muted); background-color: rgba(255,255,255,0.05); }
+        .btn-icon.delete:hover { color: #ef4444; border-color: #ef4444; background-color: rgba(239, 68, 68, 0.1); }
+
+        /* Stats Tab Styles */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; text-align: center; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; margin-top: 4px; color: var(--text-main); }
+        .stat-label { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .stacked-bar-container { margin-top: 12px; margin-bottom: 16px; }
+        .stacked-bar { height: 20px; border-radius: 10px; overflow: hidden; display: flex; background-color: #11131d; }
+        .bar-segment { height: 100%; transition: width 0.3s ease; }
+        .legend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 16px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .paper-progress-item { margin-bottom: 14px; }
+        .paper-progress-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px; }
+        .progress-track { height: 8px; background-color: #11131d; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #8b5cf6); border-radius: 4px; transition: width 0.3s; }
+        .forecast-chart { display: flex; align-items: flex-end; justify-content: space-between; height: 140px; padding-top: 20px; gap: 8px; }
+        .forecast-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; height: 100%; justify-content: flex-end; }
+        .forecast-bar { width: 100%; max-width: 36px; background: linear-gradient(180deg, var(--primary), rgba(99, 102, 241, 0.3)); border-radius: 6px 6px 0 0; min-height: 4px; transition: height 0.3s; }
+        .forecast-label { font-size: 0.75rem; color: var(--text-muted); }
+        .forecast-val { font-size: 0.75rem; font-weight: 700; }
+
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; width: 90%; max-width: 450px; padding: 24px; }
+        .modal-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; }
+        .btn-danger { background-color: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        .btn-danger:hover { background-color: #dc2626; }
+
         @media (max-width: 600px) {
             header { padding: 12px 16px; }
             .review-buttons { grid-template-columns: 1fr; }
@@ -728,15 +218,9 @@ Here is your updated, optimized code:
             </div>
         </div>
         <nav>
-            <button class="nav-btn active" onclick="switchTab('review')">
-                📝 Review <span class="badge" id="dueBadge">0</span>
-            </button>
-            <button class="nav-btn" onclick="switchTab('topics')">
-                📚 Topics
-            </button>
-            <button class="nav-btn" onclick="switchTab('stats')">
-                📊 Stats
-            </button>
+            <button class="nav-btn active" onclick="switchTab('review')">📝 Review <span class="badge" id="dueBadge">0</span></button>
+            <button class="nav-btn" onclick="switchTab('topics')">📚 Topics</button>
+            <button class="nav-btn" onclick="switchTab('stats')">📊 Stats</button>
         </nav>
         <div class="header-actions">
             <button class="btn-secondary" onclick="exportData()" title="Backup Data">💾 Export</button>
@@ -750,11 +234,9 @@ Here is your updated, optimized code:
         <!-- TAB 1: REVIEW TAB -->
         <div id="tab-review" class="tab-content active">
             <div class="review-container">
-                <div id="reviewActiveArea">
-                    <!-- Dynamic active card injected here -->
-                </div>
+                <div id="reviewActiveArea"></div>
                 <div id="queuePreviewArea" class="queue-preview" style="display:none;">
-                    <div class="queue-title">Up Next in Queue</div>
+                    <div class="queue-title">📋 Click to Select / Review Queue</div>
                     <div id="queueItemsList"></div>
                 </div>
             </div>
@@ -762,7 +244,6 @@ Here is your updated, optimized code:
 
         <!-- TAB 2: TOPICS TAB -->
         <div id="tab-topics" class="tab-content">
-            <!-- Add Topic Card -->
             <div class="card-box">
                 <div class="section-title">➕ Add New Topic</div>
                 <form id="addTopicForm" onsubmit="handleAddTopic(event)">
@@ -770,20 +251,14 @@ Here is your updated, optimized code:
                         <div class="form-group">
                             <label>Paper</label>
                             <select id="addPaper" onchange="updateSubjectDropdown()">
-                                <option value="GS1">GS1</option>
-                                <option value="GS2">GS2</option>
-                                <option value="GS3">GS3</option>
-                                <option value="GS4">GS4</option>
-                                <option value="CSAT">CSAT</option>
-                                <option value="Optional">Optional</option>
+                                <option value="GS1">GS1</option><option value="GS2">GS2</option><option value="GS3">GS3</option>
+                                <option value="GS4">GS4</option><option value="CSAT">CSAT</option><option value="Optional">Optional</option>
                                 <option value="Current Affairs">Current Affairs</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Subject</label>
-                            <select id="addSubject" onchange="toggleCustomSubjectInput()">
-                                <!-- Dynamic subjects -->
-                            </select>
+                            <select id="addSubject" onchange="toggleCustomSubjectInput()"></select>
                             <input type="text" id="addCustomSubject" placeholder="Enter custom subject name..." style="display:none; margin-top:6px;">
                         </div>
                         <div class="form-group" style="grid-column: span 2;">
@@ -793,35 +268,41 @@ Here is your updated, optimized code:
                         <div class="form-group">
                             <label>Initial Status</label>
                             <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="addStatus" value="studying" checked> 📖 Studying
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="addStatus" value="finished"> ✅ Finished
-                                </label>
+                                <label class="radio-label"><input type="radio" name="addStatus" value="studying" checked onchange="toggleFinishedOptions()"> 📖 Studying</label>
+                                <label class="radio-label"><input type="radio" name="addStatus" value="finished" onchange="toggleFinishedOptions()"> ✅ Finished</label>
                             </div>
                         </div>
+                        
+                        <!-- Manual Initial Revision Fields -->
+                        <div id="finishedOptions" style="display:none; grid-column: span 2;">
+                            <div class="form-grid" style="margin-bottom:0; grid-template-columns: 1fr 1fr;">
+                                <div class="form-group">
+                                    <label>Current Interval (days)</label>
+                                    <input type="number" id="addInitialInterval" value="1" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Last Reviewed Date</label>
+                                    <input type="date" id="addLastReviewDate">
+                                </div>
+                            </div>
+                            <p style="font-size:0.75rem; color:var(--text-dim); margin-top:8px;">
+                                Set interval to 3 for 2nd revision, 6 for 3rd, etc. Adjust date if reviewed in the past.
+                            </p>
+                        </div>
+
                         <button type="submit" class="btn-add">Save Topic</button>
                     </div>
                 </form>
             </div>
 
-            <!-- Currently Studying Section -->
             <div class="card-box">
-                <div class="section-title">
-                    <span>📖 Currently Studying (<span id="studyingCount">0</span>)</span>
-                </div>
-                <div id="studyingList">
-                    <!-- Dynamic list of studying topics -->
-                </div>
+                <div class="section-title"><span>📖 Currently Studying (<span id="studyingCount">0</span>)</span></div>
+                <div id="studyingList"></div>
             </div>
 
-            <!-- In Review Section -->
             <div class="card-box">
                 <div class="controls-bar">
-                    <div class="section-title" style="margin-bottom:0;">
-                        🔄 In Review Queue
-                    </div>
+                    <div class="section-title" style="margin-bottom:0;">🔄 In Review Queue</div>
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
                         <input type="text" id="topicSearch" placeholder="Search topics, subjects..." oninput="renderTopicsTab()">
@@ -833,70 +314,37 @@ Here is your updated, optimized code:
                         <button class="sort-btn" id="sort-new" onclick="setSortMode('new')">Shortest</button>
                     </div>
                 </div>
-                <div id="reviewTopicsList">
-                    <!-- Dynamic topics tree or list -->
-                </div>
+                <div id="reviewTopicsList"></div>
             </div>
         </div>
 
         <!-- TAB 3: STATS TAB -->
         <div id="tab-stats" class="tab-content">
             <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Topics</div>
-                    <div class="stat-value" id="statTotal">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Currently Studying</div>
-                    <div class="stat-value" id="statStudying" style="color:var(--stage-studying);">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Due Now</div>
-                    <div class="stat-value" id="statDue" style="color:#ef4444;">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Avg Ease Factor</div>
-                    <div class="stat-value" id="statEase">2.50</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Mastery Rate</div>
-                    <div class="stat-value" id="statMastery" style="color:var(--stage-mature);">0%</div>
-                </div>
+                <div class="stat-card"><div class="stat-label">Total Topics</div><div class="stat-value" id="statTotal">0</div></div>
+                <div class="stat-card"><div class="stat-label">Currently Studying</div><div class="stat-value" id="statStudying" style="color:var(--stage-studying);">0</div></div>
+                <div class="stat-card"><div class="stat-label">Due Now</div><div class="stat-value" id="statDue" style="color:#ef4444;">0</div></div>
+                <div class="stat-card"><div class="stat-label">Avg Ease Factor</div><div class="stat-value" id="statEase">2.50</div></div>
+                <div class="stat-card"><div class="stat-label">Mastery Rate</div><div class="stat-value" id="statMastery" style="color:var(--stage-mature);">0%</div></div>
             </div>
-
-            <!-- Card Maturity Stack -->
             <div class="card-box">
                 <div class="section-title">📊 Card Maturity Distribution</div>
-                <div class="stacked-bar-container">
-                    <div class="stacked-bar" id="maturityBar">
-                        <!-- Dynamic stacked segments -->
-                    </div>
-                </div>
-                <div class="legend-grid" id="maturityLegend">
-                    <!-- Dynamic legend -->
-                </div>
+                <div class="stacked-bar-container"><div class="stacked-bar" id="maturityBar"></div></div>
+                <div class="legend-grid" id="maturityLegend"></div>
             </div>
-
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                <!-- Paper Breakdown -->
                 <div class="card-box" style="margin-bottom:0;">
                     <div class="section-title">📚 Progress by Paper</div>
-                    <div id="paperBreakdownList">
-                        <!-- Dynamic paper breakdown -->
-                    </div>
+                    <div id="paperBreakdownList"></div>
                 </div>
-                <!-- 7-Day Forecast -->
                 <div class="card-box" style="margin-bottom:0;">
                     <div class="section-title">📅 7-Day Review Forecast</div>
-                    <div class="forecast-chart" id="forecastChart">
-                        <!-- Dynamic 7-day forecast bars -->
-                    </div>
+                    <div class="forecast-chart" id="forecastChart"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Modal for Edit Topic -->
     <div class="modal-overlay" id="editModal">
         <div class="modal">
             <div class="modal-title">Edit Topic Title</div>
@@ -909,7 +357,6 @@ Here is your updated, optimized code:
     </div>
 
     <script>
-        // Preset Subjects Hierarchy
         const PRESET_SUBJECTS = {
             "GS1": ["Heritage & Culture", "Modern History", "World History", "Indian Geography", "World Geography", "Indian Society"],
             "GS2": ["Constitution", "Polity & Governance", "Social Justice", "International Relations", "India & Neighbours"],
@@ -920,104 +367,38 @@ Here is your updated, optimized code:
             "Current Affairs": ["Polity", "Economy", "International", "Environment", "Science & Tech", "Social Issues"]
         };
 
-        // Application State
-        let store = {
-            topics: [],
-            customSubjects: {},
-            _initialized: false  // Flag to track if user has ever saved data
-        };
-
+        let store = { topics: [], customSubjects: {}, _initialized: false };
         let currentSortMode = 'upsc';
         let editingTopicId = null;
+        let activeReviewId = null; // Tracks which card the user selected to review
 
-        // Init App
         window.addEventListener('DOMContentLoaded', () => {
             loadStore();
             migrateStore();
-            // Only seed default data if this is a completely fresh install AND user hasn't initialized yet
-            if (!store._initialized && store.topics.length === 0) {
-                seedDefaultDataIfEmpty();
-            }
+            if (!store._initialized && store.topics.length === 0) seedDefaultDataIfEmpty();
             updateSubjectDropdown();
+            toggleFinishedOptions(); // Sync UI on load
+            // Set default date for manual entry to today
+            const dateInput = document.getElementById('addLastReviewDate');
+            if (dateInput) dateInput.value = getTodayStr();
             renderApp();
         });
 
-        // Date Utilities
-        function getTodayStr() {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
+        function getTodayStr() { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; }
+        function addDays(dateStr, days) { const date = new Date(dateStr); date.setDate(date.getDate() + days); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; }
+        function daysBetween(d1, d2) { return Math.round((new Date(d2) - new Date(d1)) / (1000 * 60 * 60 * 24)); }
 
-        function addDays(dateStr, days) {
-            const date = new Date(dateStr);
-            date.setDate(date.getDate() + days);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-
-        function daysBetween(dateStr1, dateStr2) {
-            const d1 = new Date(dateStr1);
-            const d2 = new Date(dateStr2);
-            return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
-        }
-
-        // LocalStorage Management
-        function loadStore() {
-            const data = localStorage.getItem('upsc_revision_tracker_v1');
-            if (data) {
-                try {
-                    store = JSON.parse(data);
-                } catch (e) {
-                    console.error("Failed to parse store", e);
-                }
-            }
-        }
-
-        function saveStore() {
-            store._initialized = true;  // Mark that user has interacted with data
-            localStorage.setItem('upsc_revision_tracker_v1', JSON.stringify(store));
-            renderApp();
-        }
-
-        // Reset all data
-        function resetAllData() {
-            if (confirm("⚠️ This will DELETE all your topics and reset the app. Are you sure?")) {
-                if (confirm("This cannot be undone. Continue?")) {
-                    localStorage.removeItem('upsc_revision_tracker_v1');
-                    store = {
-                        topics: [],
-                        customSubjects: {},
-                        _initialized: false
-                    };
-                    saveStore();
-                    location.reload();
-                }
-            }
-        }
-
-        // Auto Migration
+        function loadStore() { const data = localStorage.getItem('upsc_revision_tracker_v1'); if (data) { try { store = JSON.parse(data); } catch (e) {} } }
+        function saveStore() { store._initialized = true; localStorage.setItem('upsc_revision_tracker_v1', JSON.stringify(store)); renderApp(); }
+        function resetAllData() { if (confirm("⚠️ DELETE all topics and reset?")) { if (confirm("Cannot be undone. Continue?")) { localStorage.removeItem('upsc_revision_tracker_v1'); store = { topics: [], customSubjects: {}, _initialized: false }; saveStore(); location.reload(); } } }
+        
         function migrateStore() {
-            if (!store.topics) store.topics = [];
-            if (!store.customSubjects) store.customSubjects = {};
-            if (store._initialized === undefined) store._initialized = store.topics.length > 0;
-            
+            if (!store.topics) store.topics = []; if (!store.customSubjects) store.customSubjects = {}; if (store._initialized === undefined) store._initialized = store.topics.length > 0;
             let updated = false;
-            store.topics.forEach(t => {
-                if (!t.status) { t.status = 'finished'; updated = true; }
-                if (t.interval === undefined) { t.interval = 1; updated = true; }
-                if (t.ease === undefined) { t.ease = 2.5; updated = true; }
-                if (t.repetition === undefined) { t.repetition = 0; updated = true; }
-                if (!t.nextReview) { t.nextReview = getTodayStr(); updated = true; }
-            });
+            store.topics.forEach(t => { if (!t.status) { t.status = 'finished'; updated = true; } if (t.interval === undefined) { t.interval = 1; updated = true; } if (t.ease === undefined) { t.ease = 2.5; updated = true; } if (t.repetition === undefined) { t.repetition = 0; updated = true; } if (!t.nextReview) { t.nextReview = getTodayStr(); updated = true; } });
             if (updated) saveStore();
         }
 
-        // Seed Sample Data if completely empty (only on first-ever visit)
         function seedDefaultDataIfEmpty() {
             if (store.topics.length === 0 && !store._initialized) {
                 const today = getTodayStr();
@@ -1026,79 +407,26 @@ Here is your updated, optimized code:
                     { id: 't2', paper: 'GS2', subject: 'Constitution', title: 'Preamble & Fundamental Rights', status: 'finished', interval: 3, ease: 2.55, repetition: 1, nextReview: today },
                     { id: 't3', paper: 'GS3', subject: 'Economy', title: 'Monetary Policy & Inflation', status: 'studying', interval: 1, ease: 2.5, repetition: 0, nextReview: today },
                     { id: 't4', paper: 'GS4', subject: 'Ethics & Human Interface', title: 'Human Values & Determinants', status: 'finished', interval: 15, ease: 2.6, repetition: 3, nextReview: addDays(today, 5) }
-                ];
-                saveStore();
+                ]; saveStore();
             }
         }
 
-        // Helper: Card Maturity Stage
-        function getMaturityStage(card) {
-            if (card.status === 'studying') return 'studying';
-            if (card.repetition === 0 || card.interval <= 1) return 'new';
-            if (card.interval <= 3) return 'learning';
-            if (card.interval <= 14) return 'young';
-            return 'mature';
-        }
-
-        function getMaturityBadgeHTML(stage) {
-            const labels = {
-                studying: 'Studying',
-                new: 'New',
-                learning: 'Learning',
-                young: 'Young',
-                mature: 'Mature'
-            };
-            return `<span class="maturity-tag tag-${stage}">${labels[stage]}</span>`;
-        }
-
-        // Tab Switcher
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            
-            // Find active tab button
-            const btnMap = { 'review': 0, 'topics': 1, 'stats': 2 };
-            document.querySelectorAll('.nav-btn')[btnMap[tabId]].classList.add('active');
-            renderApp();
-        }
-
-        // Main Render Dispatcher
-        function renderApp() {
-            updateDueBadge();
-            renderReviewTab();
-            renderTopicsTab();
-            renderStatsTab();
-        }
-
-        function updateDueBadge() {
-            const today = getTodayStr();
-            const dueCount = store.topics.filter(t => t.status === 'finished' && t.nextReview <= today).length;
-            const badge = document.getElementById('dueBadge');
-            badge.innerText = dueCount;
-            badge.style.display = dueCount > 0 ? 'inline-block' : 'none';
-        }
-
-        // Get sorted due cards queue
-        function getDueQueue() {
-            const today = getTodayStr();
-            return store.topics
-                .filter(t => t.status === 'finished' && t.nextReview <= today)
-                .sort((a, b) => {
-                    // 1. Most overdue first
-                    const overdueA = daysBetween(a.nextReview, today);
-                    const overdueB = daysBetween(b.nextReview, today);
-                    if (overdueB !== overdueA) return overdueB - overdueA;
-                    // 2. Lowest ease first (hardest)
-                    if (a.ease !== b.ease) return a.ease - b.ease;
-                    // 3. Shortest interval first
-                    return a.interval - b.interval;
-                });
-        }
+        function getMaturityStage(card) { if (card.status === 'studying') return 'studying'; if (card.repetition === 0 || card.interval <= 1) return 'new'; if (card.interval <= 3) return 'learning'; if (card.interval <= 14) return 'young'; return 'mature'; }
+        function getMaturityBadgeHTML(stage) { return `<span class="maturity-tag tag-${stage}">${{studying:'Studying',new:'New',learning:'Learning',young:'Young',mature:'Mature'}[stage]}</span>`; }
+        
+        function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active')); document.getElementById(`tab-${tabId}`).classList.add('active'); const btnMap = { 'review': 0, 'topics': 1, 'stats': 2 }; document.querySelectorAll('.nav-btn')[btnMap[tabId]].classList.add('active'); renderApp(); }
+        function renderApp() { updateDueBadge(); renderReviewTab(); renderTopicsTab(); renderStatsTab(); }
+        function updateDueBadge() { const today = getTodayStr(); const dueCount = store.topics.filter(t => t.status === 'finished' && t.nextReview <= today).length; const badge = document.getElementById('dueBadge'); badge.innerText = dueCount; badge.style.display = dueCount > 0 ? 'inline-block' : 'none'; }
+        function getDueQueue() { const today = getTodayStr(); return store.topics.filter(t => t.status === 'finished' && t.nextReview <= today).sort((a, b) => { const oA = daysBetween(a.nextReview, today), oB = daysBetween(b.nextReview, today); if (oB !== oA) return oB - oA; if (a.ease !== b.ease) return a.ease - b.ease; return a.interval - b.interval; }); }
 
         // ----------------------------------------------------
         // RENDER TAB 1: REVIEW TAB
         // ----------------------------------------------------
+        function setActiveReviewCard(id) {
+            activeReviewId = id;
+            renderReviewTab();
+        }
+
         function renderReviewTab() {
             const dueQueue = getDueQueue();
             const activeArea = document.getElementById('reviewActiveArea');
@@ -1106,52 +434,31 @@ Here is your updated, optimized code:
             const queueItemsList = document.getElementById('queueItemsList');
 
             if (dueQueue.length === 0) {
-                // All caught up view
-                const futureReviews = store.topics
-                    .filter(t => t.status === 'finished' && t.nextReview > getTodayStr())
-                    .sort((a, b) => a.nextReview.localeCompare(b.nextReview));
-
+                activeReviewId = null;
+                const futureReviews = store.topics.filter(t => t.status === 'finished' && t.nextReview > getTodayStr()).sort((a, b) => a.nextReview.localeCompare(b.nextReview));
                 let nextInfo = "No topics in review queue.";
-                if (futureReviews.length > 0) {
-                    const days = daysBetween(getTodayStr(), futureReviews[0].nextReview);
-                    nextInfo = `Next review: <strong>${futureReviews[0].title}</strong> in <strong>${days} day(s)</strong> (${futureReviews[0].nextReview})`;
-                }
-
-                activeArea.innerHTML = `
-                    <div class="caught-up-box">
-                        <div class="caught-up-icon">🎉</div>
-                        <h2>All Caught Up!</h2>
-                        <p style="color:var(--text-muted); margin-top:8px;">You have no due cards for review right now.</p>
-                        <div class="next-review-info">${nextInfo}</div>
-                    </div>
-                `;
+                if (futureReviews.length > 0) { const days = daysBetween(getTodayStr(), futureReviews[0].nextReview); nextInfo = `Next review: <strong>${futureReviews[0].title}</strong> in <strong>${days} day(s)</strong>`; }
+                activeArea.innerHTML = `<div class="caught-up-box"><div class="caught-up-icon">🎉</div><h2>All Caught Up!</h2><p style="color:var(--text-muted); margin-top:8px;">You have no due cards for review right now.</p><div class="next-review-info">${nextInfo}</div></div>`;
                 queuePreviewArea.style.display = 'none';
                 return;
             }
 
-            const activeCard = dueQueue[0];
+            // If active card is no longer in queue (reviewed it), or none selected, default to top
+            if (!activeReviewId || !dueQueue.find(c => c.id === activeReviewId)) {
+                activeReviewId = dueQueue[0].id;
+            }
+
+            const activeCard = dueQueue.find(c => c.id === activeReviewId);
             const maturity = getMaturityStage(activeCard);
 
-            // Calculations for Button Previews
-            // OK Button Preview - MODIFIED: Soft Reset (Multiplier of 0.6)
             const okEase = Math.max(1.3, (activeCard.ease - 0.15)).toFixed(2);
             const okInterval = Math.max(1, Math.round(activeCard.interval * 0.6));
-            
-            // Good Button Preview
             const goodEase = Math.min(3.0, (activeCard.ease + 0.05)).toFixed(2);
-            let goodInterval;
-            if (activeCard.interval === 1) {
-                goodInterval = 3;
-            } else {
-                goodInterval = Math.round(activeCard.interval * parseFloat(goodEase));
-            }
+            let goodInterval = activeCard.interval === 1 ? 3 : Math.round(activeCard.interval * parseFloat(goodEase));
 
             activeArea.innerHTML = `
                 <div class="review-card">
-                    <div class="review-breadcrumb">
-                        ${activeCard.paper} &rsaquo; ${activeCard.subject}
-                    </div>
-                    
+                    <div class="review-breadcrumb">${activeCard.paper} &rsaquo; ${activeCard.subject}</div>
                     <div class="review-title">${escapeHtml(activeCard.title)}</div>
                     <div class="meta-pills">
                         <div class="pill">Interval: <strong>${activeCard.interval}d</strong></div>
@@ -1160,63 +467,46 @@ Here is your updated, optimized code:
                     </div>
                     <div class="review-buttons">
                         <button class="btn-review btn-ok" onclick="processReview('${activeCard.id}', 'ok')">
-                            <span class="btn-label">⚠️ OK</span>
-                            <span class="btn-sub">Knew it but shaky</span>
+                            <span class="btn-label">⚠️ OK</span><span class="btn-sub">Knew it but shaky</span>
                             <span class="btn-sub" style="margin-top:4px; font-weight:600;">Next: ${okInterval}d | Ease: ${okEase}</span>
                         </button>
                         <button class="btn-review btn-good" onclick="processReview('${activeCard.id}', 'good')">
-                            <span class="btn-label">🟢 Good</span>
-                            <span class="btn-sub">Solid recall</span>
+                            <span class="btn-label">🟢 Good</span><span class="btn-sub">Solid recall</span>
                             <span class="btn-sub" style="margin-top:4px; font-weight:600;">Next: ${goodInterval}d | Ease: ${goodEase}</span>
                         </button>
                     </div>
-                </div>
-            `;
+                </div>`;
 
-            // Queue Preview (Up to 3 upcoming)
-            const upcomingQueue = dueQueue.slice(1, 4);
-            if (upcomingQueue.length > 0) {
-                queuePreviewArea.style.display = 'block';
-                queueItemsList.innerHTML = upcomingQueue.map((item, idx) => `
-                    <div class="queue-item">
-                        <div>
-                            <strong>${idx + 2}. ${escapeHtml(item.title)}</strong>
-                            <div style="font-size:0.75rem; color:var(--text-muted);">${item.paper} › ${item.subject}</div>
-                        </div>
-                        <div>${getMaturityBadgeHTML(getMaturityStage(item))}</div>
+            queuePreviewArea.style.display = 'block';
+            queueItemsList.innerHTML = dueQueue.map((item, idx) => `
+                <div class="queue-item ${item.id === activeReviewId ? 'active-item' : ''}" onclick="setActiveReviewCard('${item.id}')">
+                    <div>
+                        <strong>${idx + 1}. ${escapeHtml(item.title)}</strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${item.paper} › ${item.subject} • Overdue by ${daysBetween(item.nextReview, getTodayStr())}d</div>
                     </div>
-                `).join('');
-            } else {
-                queuePreviewArea.style.display = 'none';
-            }
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${getMaturityBadgeHTML(getMaturityStage(item))}
+                        ${item.id !== activeReviewId ? `<span style="font-size:0.7rem; color:var(--primary); font-weight:600;">REVIEW</span>` : `<span style="font-size:0.7rem; color:var(--accent-ok);">ACTIVE</span>`}
+                    </div>
+                </div>
+            `).join('');
         }
 
-        // Handle SRS Answer Processing
         function processReview(cardId, rating) {
             const card = store.topics.find(t => t.id === cardId);
             if (!card) return;
             const today = getTodayStr();
-
             if (rating === 'ok') {
-                // OK (Shaky): Soft Reset / Step-Back
-                // Reduce ease by 0.15 (less harsh than 0.30, since it's not a total fail)
                 card.ease = Math.max(1.3, card.ease - 0.15);
-                // Shrink interval by 40% (multiplier of 0.6), minimum 1 day.
-                // This prevents a hard reset to Day 1, respecting the "Savings Effect".
                 card.interval = Math.max(1, Math.round(card.interval * 0.6));
-                // We do NOT reset repetition to 0, as residual memory exists.
                 card.nextReview = addDays(today, card.interval);
             } else if (rating === 'good') {
-                // Good: Ease bumps by +0.05, interval grows
                 card.ease = Math.min(3.0, card.ease + 0.05);
-                if (card.interval === 1) {
-                    card.interval = 3;
-                } else {
-                    card.interval = Math.round(card.interval * card.ease);
-                }
+                card.interval = card.interval === 1 ? 3 : Math.round(card.interval * card.ease);
                 card.repetition += 1;
                 card.nextReview = addDays(today, card.interval);
             }
+            activeReviewId = null; // Clear selection so next render picks the new top card
             saveStore();
         }
 
@@ -1226,26 +516,22 @@ Here is your updated, optimized code:
         function updateSubjectDropdown() {
             const paper = document.getElementById('addPaper').value;
             const subjectSelect = document.getElementById('addSubject');
-            
-            const preset = PRESET_SUBJECTS[paper] || [];
-            const custom = store.customSubjects[paper] || [];
+            const preset = PRESET_SUBJECTS[paper] || []; const custom = store.customSubjects[paper] || [];
             const allSubjects = [...new Set([...preset, ...custom])];
-
-            subjectSelect.innerHTML = allSubjects.map(s => `<option value="${s}">${s}</option>`).join('') +
-                `<option value="__custom__">+ Add Custom Subject...</option>`;
-
+            subjectSelect.innerHTML = allSubjects.map(s => `<option value="${s}">${s}</option>`).join('') + `<option value="__custom__">+ Add Custom Subject...</option>`;
             toggleCustomSubjectInput();
         }
-
-        function toggleCustomSubjectInput() {
-            const select = document.getElementById('addSubject');
-            const customInput = document.getElementById('addCustomSubject');
-            if (select.value === '__custom__') {
-                customInput.style.display = 'block';
-                customInput.required = true;
+        function toggleCustomSubjectInput() { const s = document.getElementById('addSubject'); const c = document.getElementById('addCustomSubject'); if (s.value === '__custom__') { c.style.display = 'block'; c.required = true; } else { c.style.display = 'none'; c.required = false; } }
+        function toggleFinishedOptions() {
+            const status = document.querySelector('input[name="addStatus"]:checked').value;
+            const opts = document.getElementById('finishedOptions');
+            if (status === 'finished') {
+                opts.style.display = 'block';
+                // Ensure date is set to today if freshly switched
+                const dateInput = document.getElementById('addLastReviewDate');
+                if (!dateInput.value) dateInput.value = getTodayStr();
             } else {
-                customInput.style.display = 'none';
-                customInput.required = false;
+                opts.style.display = 'none';
             }
         }
 
@@ -1254,382 +540,103 @@ Here is your updated, optimized code:
             const paper = document.getElementById('addPaper').value;
             let subject = document.getElementById('addSubject').value;
             const customSubjectInput = document.getElementById('addCustomSubject');
-            
-            if (subject === '__custom__') {
-                subject = customSubjectInput.value.trim();
-                if (!subject) return;
-                // Save custom subject
-                if (!store.customSubjects[paper]) store.customSubjects[paper] = [];
-                if (!store.customSubjects[paper].includes(subject)) {
-                    store.customSubjects[paper].push(subject);
-                }
-            }
-
+            if (subject === '__custom__') { subject = customSubjectInput.value.trim(); if (!subject) return; if (!store.customSubjects[paper]) store.customSubjects[paper] = []; if (!store.customSubjects[paper].includes(subject)) store.customSubjects[paper].push(subject); }
             const title = document.getElementById('addTopicTitle').value.trim();
             const status = document.querySelector('input[name="addStatus"]:checked').value;
+            
+            let interval = 1;
+            let nextReview = getTodayStr();
+            let repetition = 0;
 
-            const newTopic = {
-                id: 'topic_' + Date.now(),
-                paper,
-                subject,
-                title,
-                status,
-                interval: 1,
-                ease: 2.5,
-                repetition: 0,
-                nextReview: getTodayStr()
-            };
+            if (status === 'finished') {
+                interval = parseInt(document.getElementById('addInitialInterval').value) || 1;
+                const lastReviewDate = document.getElementById('addLastReviewDate').value || getTodayStr();
+                nextReview = addDays(lastReviewDate, interval);
+                
+                // Estimate repetition based on interval for better maturity stats
+                if (interval > 1 && interval <= 3) repetition = 1;
+                else if (interval > 3 && interval <= 10) repetition = 2;
+                else if (interval > 10) repetition = 3;
+            }
+
+            const newTopic = { id: 'topic_' + Date.now(), paper, subject, title, status, interval, ease: 2.5, repetition, nextReview };
             store.topics.push(newTopic);
             saveStore();
-
             document.getElementById('addTopicTitle').value = '';
             customSubjectInput.value = '';
             updateSubjectDropdown();
         }
 
-        function setSortMode(mode) {
-            currentSortMode = mode;
-            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`sort-${mode}`).classList.add('active');
-            renderTopicsTab();
-        }
+        function setSortMode(mode) { currentSortMode = mode; document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active')); document.getElementById(`sort-${mode}`).classList.add('active'); renderTopicsTab(); }
 
         function renderTopicsTab() {
             const searchQuery = (document.getElementById('topicSearch')?.value || '').toLowerCase();
-
-            // 1. Render Currently Studying Section
             const studyingListEl = document.getElementById('studyingList');
-            const studyingTopics = store.topics.filter(t => t.status === 'studying' && 
-                (t.title.toLowerCase().includes(searchQuery) || t.subject.toLowerCase().includes(searchQuery) || t.paper.toLowerCase().includes(searchQuery))
-            );
+            const studyingTopics = store.topics.filter(t => t.status === 'studying' && (t.title.toLowerCase().includes(searchQuery) || t.subject.toLowerCase().includes(searchQuery) || t.paper.toLowerCase().includes(searchQuery)));
             document.getElementById('studyingCount').innerText = store.topics.filter(t => t.status === 'studying').length;
+            if (studyingTopics.length === 0) { studyingListEl.innerHTML = `<div style="color:var(--text-dim); font-size:0.85rem; padding:8px 0;">No topics currently being studied.</div>`; } else { studyingListEl.innerHTML = studyingTopics.map(t => `<div class="topic-row" style="border-radius:8px; margin-bottom:6px; border:1px solid var(--border-color);"><div class="topic-info"><div><div class="topic-title">${escapeHtml(t.title)}</div><div class="topic-meta"><span>${t.paper} &rsaquo; ${t.subject}</span></div></div></div><div class="topic-actions"><button class="btn-secondary" style="font-size:0.75rem; padding:4px 8px;" onclick="markFinished('${t.id}')">✅ Mark Finished</button><button class="btn-icon" onclick="openEditModal('${t.id}')" title="Edit">✎</button><button class="btn-icon delete" onclick="deleteTopic('${t.id}')" title="Delete">✕</button></div></div>`).join(''); }
 
-            if (studyingTopics.length === 0) {
-                studyingListEl.innerHTML = `<div style="color:var(--text-dim); font-size:0.85rem; padding:8px 0;">No topics currently being studied. Add new topics above!</div>`;
-            } else {
-                studyingListEl.innerHTML = studyingTopics.map(t => `
-                    <div class="topic-row" style="border-radius:8px; margin-bottom:6px; border:1px solid var(--border-color);">
-                        <div class="topic-info">
-                            <div>
-                                <div class="topic-title">${escapeHtml(t.title)}</div>
-                                <div class="topic-meta">
-                                    <span>${t.paper} &rsaquo; ${t.subject}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="topic-actions">
-                            <button class="btn-secondary" style="font-size:0.75rem; padding:4px 8px;" onclick="markFinished('${t.id}')">✅ Mark Finished</button>
-                            <button class="btn-icon" onclick="openEditModal('${t.id}')" title="Edit">✎</button>
-                            <button class="btn-icon delete" onclick="deleteTopic('${t.id}')" title="Delete">✕</button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-
-            // 2. Render In-Review Section
             const reviewTopicsList = document.getElementById('reviewTopicsList');
-            let reviewTopics = store.topics.filter(t => t.status === 'finished' && 
-                (t.title.toLowerCase().includes(searchQuery) || t.subject.toLowerCase().includes(searchQuery) || t.paper.toLowerCase().includes(searchQuery))
-            );
-
-            if (reviewTopics.length === 0) {
-                reviewTopicsList.innerHTML = `<div style="color:var(--text-dim); font-size:0.85rem; padding:16px 0; text-align:center;">No in-review topics match your filter.</div>`;
-                return;
-            }
+            let reviewTopics = store.topics.filter(t => t.status === 'finished' && (t.title.toLowerCase().includes(searchQuery) || t.subject.toLowerCase().includes(searchQuery) || t.paper.toLowerCase().includes(searchQuery)));
+            if (reviewTopics.length === 0) { reviewTopicsList.innerHTML = `<div style="color:var(--text-dim); font-size:0.85rem; padding:16px 0; text-align:center;">No in-review topics match your filter.</div>`; return; }
 
             if (currentSortMode === 'upsc') {
-                // Group by Paper -> Subject
-                const grouped = {};
-                reviewTopics.forEach(t => {
-                    if (!grouped[t.paper]) grouped[t.paper] = {};
-                    if (!grouped[t.paper][t.subject]) grouped[t.paper][t.subject] = [];
-                    grouped[t.paper][t.subject].push(t);
-                });
-
+                const grouped = {}; reviewTopics.forEach(t => { if (!grouped[t.paper]) grouped[t.paper] = {}; if (!grouped[t.paper][t.subject]) grouped[t.paper][t.subject] = []; grouped[t.paper][t.subject].push(t); });
                 let treeHTML = '';
-                for (const paper in grouped) {
-                    treeHTML += `
-                        <div class="tree-paper">
-                            <div class="tree-paper-header" onclick="toggleCollapse(this)">
-                                <span>📌 ${paper}</span>
-                                <span style="font-size:0.8rem; color:var(--text-muted);">${Object.values(grouped[paper]).flat().length} topics ▾</span>
-                            </div>
-                            <div class="tree-paper-body">
-                    `;
-                    for (const subject in grouped[paper]) {
-                        treeHTML += `
-                            <div class="tree-subject">
-                                <div class="tree-subject-header">&bull; ${subject}</div>
-                        `;
-                        grouped[paper][subject].forEach(t => {
-                            treeHTML += renderTopicRowHTML(t);
-                        });
-                        treeHTML += `</div>`;
-                    }
-                    treeHTML += `</div></div>`;
-                }
+                for (const paper in grouped) { treeHTML += `<div class="tree-paper"><div class="tree-paper-header" onclick="toggleCollapse(this)"><span>📌 ${paper}</span><span style="font-size:0.8rem; color:var(--text-muted);">${Object.values(grouped[paper]).flat().length} topics ▾</span></div><div class="tree-paper-body">`; for (const subject in grouped[paper]) { treeHTML += `<div class="tree-subject"><div class="tree-subject-header">&bull; ${subject}</div>`; grouped[paper][subject].forEach(t => { treeHTML += renderTopicRowHTML(t); }); treeHTML += `</div>`; } treeHTML += `</div></div>`; }
                 reviewTopicsList.innerHTML = treeHTML;
             } else {
-                // Flat List Sorting Modes
-                if (currentSortMode === 'due') {
-                    // Overdue first
-                    reviewTopics.sort((a, b) => a.nextReview.localeCompare(b.nextReview));
-                } else if (currentSortMode === 'hard') {
-                    // Lowest ease first
-                    reviewTopics.sort((a, b) => a.ease - b.ease);
-                } else if (currentSortMode === 'new') {
-                    // Shortest interval first
-                    reviewTopics.sort((a, b) => a.interval - b.interval);
-                }
+                if (currentSortMode === 'due') reviewTopics.sort((a, b) => a.nextReview.localeCompare(b.nextReview));
+                else if (currentSortMode === 'hard') reviewTopics.sort((a, b) => a.ease - b.ease);
+                else if (currentSortMode === 'new') reviewTopics.sort((a, b) => a.interval - b.interval);
                 reviewTopicsList.innerHTML = reviewTopics.map(t => renderTopicRowHTML(t, true)).join('');
             }
         }
 
         function renderTopicRowHTML(t, showFullMeta = false) {
-            const today = getTodayStr();
-            const isDue = t.nextReview <= today;
-            const dueText = isDue ? `<span style="color:#ef4444; font-weight:700;">DUE NOW</span>` : `Due: ${t.nextReview}`;
-
-            return `
-                <div class="topic-row">
-                    <div class="topic-info">
-                        <div>
-                            <div class="topic-title">${escapeHtml(t.title)}</div>
-                            <div class="topic-meta">
-                                ${showFullMeta ? `<span>${t.paper} &rsaquo; ${t.subject}</span> &bull;` : ''}
-                                <span>Interval: <strong>${t.interval}d</strong></span> &bull; 
-                                <span>Ease: <strong>${t.ease.toFixed(2)}</strong></span> &bull; 
-                                <span>${dueText}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        ${getMaturityBadgeHTML(getMaturityStage(t))}
-                        <div class="topic-actions">
-                            <button class="btn-icon" onclick="moveToStudying('${t.id}')" title="Move back to studying">📖</button>
-                            <button class="btn-icon" onclick="openEditModal('${t.id}')" title="Edit title">✎</button>
-                            <button class="btn-icon delete" onclick="deleteTopic('${t.id}')" title="Delete">✕</button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const today = getTodayStr(); const isDue = t.nextReview <= today; const dueText = isDue ? `<span style="color:#ef4444; font-weight:700;">DUE NOW</span>` : `Due: ${t.nextReview}`;
+            return `<div class="topic-row"><div class="topic-info"><div><div class="topic-title">${escapeHtml(t.title)}</div><div class="topic-meta">${showFullMeta ? `<span>${t.paper} &rsaquo; ${t.subject}</span> &bull;` : ''}<span>Interval: <strong>${t.interval}d</strong></span> &bull; <span>Ease: <strong>${t.ease.toFixed(2)}</strong></span> &bull; <span>${dueText}</span></div></div></div><div style="display:flex; align-items:center; gap:8px;">${getMaturityBadgeHTML(getMaturityStage(t))}<div class="topic-actions"><button class="btn-icon" onclick="moveToStudying('${t.id}')" title="Move back to studying">📖</button><button class="btn-icon" onclick="openEditModal('${t.id}')" title="Edit title">✎</button><button class="btn-icon delete" onclick="deleteTopic('${t.id}')" title="Delete">✕</button></div></div></div>`;
         }
 
-        function toggleCollapse(headerEl) {
-            const body = headerEl.nextElementSibling;
-            if (body.style.display === 'none') {
-                body.style.display = 'block';
-            } else {
-                body.style.display = 'none';
-            }
-        }
-
-        function markFinished(id) {
-            const card = store.topics.find(t => t.id === id);
-            if (card) {
-                card.status = 'finished';
-                card.nextReview = getTodayStr(); // Due immediately
-                saveStore();
-            }
-        }
-
-        function moveToStudying(id) {
-            const card = store.topics.find(t => t.id === id);
-            if (card) {
-                card.status = 'studying';
-                saveStore();
-            }
-        }
-
-        function deleteTopic(id) {
-            if (confirm("Are you sure you want to delete this topic?")) {
-                store.topics = store.topics.filter(t => t.id !== id);
-                saveStore();
-            }
-        }
-
-        // Inline Title Edit Modal
-        function openEditModal(id) {
-            const card = store.topics.find(t => t.id === id);
-            if (!card) return;
-            editingTopicId = id;
-            document.getElementById('editTopicInput').value = card.title;
-            document.getElementById('editModal').classList.add('active');
-        }
-
-        function closeEditModal() {
-            editingTopicId = null;
-            document.getElementById('editModal').classList.remove('active');
-        }
-
-        function saveEditTopic() {
-            if (!editingTopicId) return;
-            const newTitle = document.getElementById('editTopicInput').value.trim();
-            if (newTitle) {
-                const card = store.topics.find(t => t.id === editingTopicId);
-                if (card) {
-                    card.title = newTitle;
-                    saveStore();
-                }
-            }
-            closeEditModal();
-        }
+        function toggleCollapse(headerEl) { const body = headerEl.nextElementSibling; body.style.display = body.style.display === 'none' ? 'block' : 'none'; }
+        function markFinished(id) { const card = store.topics.find(t => t.id === id); if (card) { card.status = 'finished'; card.nextReview = getTodayStr(); saveStore(); } }
+        function moveToStudying(id) { const card = store.topics.find(t => t.id === id); if (card) { card.status = 'studying'; saveStore(); } }
+        function deleteTopic(id) { if (confirm("Delete this topic?")) { store.topics = store.topics.filter(t => t.id !== id); saveStore(); } }
+        function openEditModal(id) { const card = store.topics.find(t => t.id === id); if (!card) return; editingTopicId = id; document.getElementById('editTopicInput').value = card.title; document.getElementById('editModal').classList.add('active'); }
+        function closeEditModal() { editingTopicId = null; document.getElementById('editModal').classList.remove('active'); }
+        function saveEditTopic() { if (!editingTopicId) return; const newTitle = document.getElementById('editTopicInput').value.trim(); if (newTitle) { const card = store.topics.find(t => t.id === editingTopicId); if (card) { card.title = newTitle; saveStore(); } } closeEditModal(); }
 
         // ----------------------------------------------------
         // RENDER TAB 3: STATS TAB
         // ----------------------------------------------------
         function renderStatsTab() {
-            const total = store.topics.length;
-            const studying = store.topics.filter(t => t.status === 'studying').length;
-            const finished = store.topics.filter(t => t.status === 'finished');
-            const today = getTodayStr();
-            const dueNow = finished.filter(t => t.nextReview <= today).length;
+            const total = store.topics.length; const studying = store.topics.filter(t => t.status === 'studying').length; const finished = store.topics.filter(t => t.status === 'finished'); const today = getTodayStr(); const dueNow = finished.filter(t => t.nextReview <= today).length;
+            const avgEase = finished.length > 0 ? (finished.reduce((sum, t) => sum + t.ease, 0) / finished.length).toFixed(2) : "2.50";
+            const matureCount = finished.filter(t => getMaturityStage(t) === 'mature').length; const masteryRate = finished.length > 0 ? Math.round((matureCount / finished.length) * 100) : 0;
+            document.getElementById('statTotal').innerText = total; document.getElementById('statStudying').innerText = studying; document.getElementById('statDue').innerText = dueNow; document.getElementById('statEase').innerText = avgEase; document.getElementById('statMastery').innerText = `${masteryRate}%`;
+            
+            const stages = { studying: 0, new: 0, learning: 0, young: 0, mature: 0 }; store.topics.forEach(t => { stages[getMaturityStage(t)]++; });
+            const colors = { studying: 'var(--stage-studying)', new: 'var(--stage-new)', learning: 'var(--stage-learning)', young: 'var(--stage-young)', mature: 'var(--stage-mature)' };
+            const labels = { studying: 'Studying', new: 'New', learning: 'Learning (≤3d)', young: 'Young (≤14d)', mature: 'Mature (>14d)' };
+            let barHTML = '', legendHTML = '';
+            for (const key in stages) { const count = stages[key]; const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0; barHTML += `<div class="bar-segment" style="width:${pct}%; background-color:${colors[key]};" title="${labels[key]}: ${count}"></div>`; legendHTML += `<div class="legend-item"><div class="legend-dot" style="background-color:${colors[key]};"></div><span><strong>${labels[key]}:</strong> ${count} (${pct}%)</span></div>`; }
+            document.getElementById('maturityBar').innerHTML = barHTML; document.getElementById('maturityLegend').innerHTML = legendHTML;
 
-            const avgEase = finished.length > 0 
-                ? (finished.reduce((sum, t) => sum + t.ease, 0) / finished.length).toFixed(2) 
-                : "2.50";
-
-            const matureCount = finished.filter(t => getMaturityStage(t) === 'mature').length;
-            const masteryRate = finished.length > 0 ? Math.round((matureCount / finished.length) * 100) : 0;
-
-            document.getElementById('statTotal').innerText = total;
-            document.getElementById('statStudying').innerText = studying;
-            document.getElementById('statDue').innerText = dueNow;
-            document.getElementById('statEase').innerText = avgEase;
-            document.getElementById('statMastery').innerText = `${masteryRate}%`;
-
-            // Maturity Distribution
-            const stages = { studying: 0, new: 0, learning: 0, young: 0, mature: 0 };
-            store.topics.forEach(t => {
-                const s = getMaturityStage(t);
-                stages[s] = (stages[s] || 0) + 1;
-            });
-
-            const colors = {
-                studying: 'var(--stage-studying)',
-                new: 'var(--stage-new)',
-                learning: 'var(--stage-learning)',
-                young: 'var(--stage-young)',
-                mature: 'var(--stage-mature)'
-            };
-            const labels = {
-                studying: 'Studying',
-                new: 'New',
-                learning: 'Learning (≤3d)',
-                young: 'Young (≤14d)',
-                mature: 'Mature (>14d)'
-            };
-
-            const maturityBar = document.getElementById('maturityBar');
-            const maturityLegend = document.getElementById('maturityLegend');
-
-            let barHTML = '';
-            let legendHTML = '';
-            for (const key in stages) {
-                const count = stages[key];
-                const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-                barHTML += `<div class="bar-segment" style="width:${pct}%; background-color:${colors[key]};" title="${labels[key]}: ${count}"></div>`;
-                legendHTML += `
-                    <div class="legend-item">
-                        <div class="legend-dot" style="background-color:${colors[key]};"></div>
-                        <span><strong>${labels[key]}:</strong> ${count} (${pct}%)</span>
-                    </div>
-                `;
-            }
-            maturityBar.innerHTML = barHTML;
-            maturityLegend.innerHTML = legendHTML;
-
-            // Paper Breakdown Progress
             const papers = ["GS1", "GS2", "GS3", "GS4", "CSAT", "Optional", "Current Affairs"];
-            const paperList = document.getElementById('paperBreakdownList');
+            document.getElementById('paperBreakdownList').innerHTML = papers.map(paper => { const pt = store.topics.filter(t => t.paper === paper); const pf = pt.filter(t => t.status === 'finished'); const pm = pf.filter(t => getMaturityStage(t) === 'mature'); const pd = pf.filter(t => t.nextReview <= today).length; const pct = pf.length > 0 ? Math.round((pm.length / pf.length) * 100) : 0; return `<div class="paper-progress-item"><div class="paper-progress-header"><span><strong>${paper}</strong> (${pt.length} topics)</span><span>${pd > 0 ? `<span style="color:#ef4444; font-weight:700;">${pd} due</span> &bull;` : ''} Mastery: ${pct}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div></div>`; }).join('');
 
-            paperList.innerHTML = papers.map(paper => {
-                const paperTopics = store.topics.filter(t => t.paper === paper);
-                const paperFinished = paperTopics.filter(t => t.status === 'finished');
-                const paperMature = paperFinished.filter(t => getMaturityStage(t) === 'mature');
-                const paperDue = paperFinished.filter(t => t.nextReview <= today).length;
-                const pct = paperFinished.length > 0 ? Math.round((paperMature.length / paperFinished.length) * 100) : 0;
-
-                return `
-                    <div class="paper-progress-item">
-                        <div class="paper-progress-header">
-                            <span><strong>${paper}</strong> (${paperTopics.length} topics)</span>
-                            <span>${paperDue > 0 ? `<span style="color:#ef4444; font-weight:700;">${paperDue} due</span> &bull;` : ''} Mastery: ${pct}%</span>
-                        </div>
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width:${pct}%;"></div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            // 7-Day Forecast Chart
-            const forecastChart = document.getElementById('forecastChart');
-            const forecastDays = [];
-            let maxCount = 1;
-            for (let i = 0; i < 7; i++) {
-                const dStr = addDays(today, i);
-                const count = finished.filter(t => t.nextReview === dStr).length;
-                forecastDays.push({ dayStr: dStr, dayLabel: i === 0 ? 'Today' : (i === 1 ? 'Tomorrow' : dStr.slice(5)), count });
-                if (count > maxCount) maxCount = count;
-            }
-
-            forecastChart.innerHTML = forecastDays.map(f => {
-                const heightPct = Math.max(8, Math.round((f.count / maxCount) * 100));
-                return `
-                    <div class="forecast-col">
-                        <div class="forecast-val">${f.count}</div>
-                        <div class="forecast-bar" style="height:${heightPct}%;"></div>
-                        <div class="forecast-label">${f.dayLabel}</div>
-                    </div>
-                `;
-            }).join('');
+            const forecastDays = []; let maxCount = 1;
+            for (let i = 0; i < 7; i++) { const dStr = addDays(today, i); const count = finished.filter(t => t.nextReview === dStr).length; forecastDays.push({ dayStr: dStr, dayLabel: i === 0 ? 'Today' : (i === 1 ? 'Tomorrow' : dStr.slice(5)), count }); if (count > maxCount) maxCount = count; }
+            document.getElementById('forecastChart').innerHTML = forecastDays.map(f => { const heightPct = Math.max(8, Math.round((f.count / maxCount) * 100)); return `<div class="forecast-col"><div class="forecast-val">${f.count}</div><div class="forecast-bar" style="height:${heightPct}%;"></div><div class="forecast-label">${f.dayLabel}</div></div>`; }).join('');
         }
 
         // ----------------------------------------------------
         // DATA EXPORT / IMPORT
         // ----------------------------------------------------
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(store, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `upsc_revision_backup_${getTodayStr()}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData() {
-            document.getElementById('importFileInput').click();
-        }
-
-        function handleFileImport(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const imported = JSON.parse(evt.target.result);
-                    if (imported && Array.isArray(imported.topics)) {
-                        store = imported;
-                        store._initialized = true;
-                        migrateStore();
-                        saveStore();
-                        alert("Data imported successfully!");
-                    } else {
-                        alert("Invalid backup file format.");
-                    }
-                } catch (err) {
-                    alert("Error parsing backup JSON file.");
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-        }
+        function exportData() { const d = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(store, null, 2)); const a = document.createElement('a'); a.setAttribute("href", d); a.setAttribute("download", `upsc_revision_backup_${getTodayStr()}.json`); document.body.appendChild(a); a.click(); a.remove(); }
+        function importData() { document.getElementById('importFileInput').click(); }
+        function handleFileImport(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(evt) { try { const imported = JSON.parse(evt.target.result); if (imported && Array.isArray(imported.topics)) { store = imported; store._initialized = true; migrateStore(); saveStore(); alert("Data imported successfully!"); } else { alert("Invalid backup file format."); } } catch (err) { alert("Error parsing backup JSON file."); } }; reader.readAsText(file); }
+        function escapeHtml(str) { return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
 </html>
-```
